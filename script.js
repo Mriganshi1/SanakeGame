@@ -11,6 +11,24 @@ let lockBoard = false;
 let matchedPairs = 0;
 let cards = [];
 
+// TIMER FEATURE
+let timerInterval = null;
+let secondsElapsed = 0;
+
+function startTimer() {
+  secondsElapsed = 0;
+  document.getElementById('timer').textContent = `Time: 0s`;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    secondsElapsed++;
+    document.getElementById('timer').textContent = `Time: ${secondsElapsed}s`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+}
+
 // Fetch 8 unique Pokémon
 async function getPokemonSymbols() {
   const ids = [];
@@ -22,7 +40,8 @@ async function getPokemonSymbols() {
     .then(res => res.json())
     .then(data => ({
       name: data.name,
-      symbol: data.name.charAt(0).toUpperCase() // Use first letter as symbol (for B&W)
+      symbol: `<img src='${data.sprites.front_default}' alt='${data.name}' style='filter: grayscale(1); width:48px; height:48px;'/>`,
+      img: data.sprites.front_default
     })));
   return Promise.all(promises);
 }
@@ -66,7 +85,7 @@ function onCardClick(e) {
     matchedPairs++;
     resetTurn();
     if (matchedPairs === PAIRS) {
-      winMessage.style.display = 'block';
+      onWin();
     }
   } else {
     setTimeout(() => {
@@ -82,6 +101,12 @@ function resetTurn() {
   lockBoard = false;
 }
 
+function onWin() {
+  winMessage.innerHTML = `You Win!<br>Time: ${secondsElapsed}s`;
+  winMessage.style.display = 'block';
+  stopTimer();
+}
+
 async function setupGame() {
   winMessage.style.display = 'none';
   board.innerHTML = '';
@@ -91,6 +116,7 @@ async function setupGame() {
   cardData = shuffle(cardData);
   cards = cardData.map(p => createCard(p.symbol, p.name));
   cards.forEach(card => board.appendChild(card));
+  startTimer();
 }
 
 setupGame();
